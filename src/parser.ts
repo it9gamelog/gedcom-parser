@@ -1,9 +1,9 @@
 // Minimal GEDCOM parser implementation in TypeScript
-import { GedcomNode, GedcomValue, DecoderRegistry } from "./api";
-import { applyDecoders, createDefaultRegistry } from "./decoder";
-import { DefaultNodeFactory } from "./node";
+import { GedcomNode, GedcomValue, DecoderRegistry } from "./api.js";
+import { applyDecoders, createDefaultRegistry } from "./decoder.js";
+import { DefaultNodeFactory } from "./node.js";
 
-import { resolvePointers } from "./pointer";
+import { resolvePointers } from "./pointer.js";
 
 function parseLine(line: string) {
   line = line.replace(/\r$/, "");

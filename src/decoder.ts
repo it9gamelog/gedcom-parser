@@ -4,7 +4,7 @@ import {
   TagDecoder,
   NodeFactory,
   DecoderRegistry,
-} from "./api";
+} from "./api.js";
 
 // Simple registry implementation
 export class SimpleDecoderRegistry implements DecoderRegistry {

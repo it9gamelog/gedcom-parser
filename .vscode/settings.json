@@ -2,8 +2,14 @@
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "js/ts.implicitProjectConfig.target": "ES2024",
-  "jest.runMode": "on-demand",
   "eslint.run": "onType",
   "eslint.validate": ["typescript", "javascript"],
-  "eslint.lintTask.enable": true
+  "eslint.lintTask.enable": true,
+  "typescript.tsdk": ".yarn/sdks/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "search.exclude": {
+    "**/.yarn": true,
+    "**/.pnp.*": true
+  },
+  "eslint.nodePath": ".yarn/sdks"
 }

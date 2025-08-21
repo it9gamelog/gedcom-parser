@@ -1,4 +1,4 @@
-import parser from "../parser";
+import parser from "../parser.js";
 
 const sample = `0 @I1@ INDI
 1 NAME John /Doe/

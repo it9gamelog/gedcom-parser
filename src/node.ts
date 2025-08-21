@@ -1,4 +1,4 @@
-import { GedcomNode, GedcomValue } from "./api";
+import { GedcomNode, GedcomValue } from "./api.js";
 
 // Minimal base implementation of GedcomNode
 export class BaseNode implements GedcomNode {

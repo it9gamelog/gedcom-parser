@@ -4,7 +4,7 @@ import {
   TagDecoder,
   NodeFactory,
   DecoderRegistry,
-} from "./api";
+} from "./api.js";
 
 // Resolve pointers across a parse result
 export async function resolvePointers(

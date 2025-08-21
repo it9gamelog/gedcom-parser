@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { parseGedcomSync } from "./parser";
-import { IndividualNode, FamilyGroupNode, BaseNode } from "./node";
+import { parseGedcomSync } from "./parser.js";
+import { IndividualNode, FamilyGroupNode, BaseNode } from "./node.js";
 
 const BOM = "\uFEFF";
 
