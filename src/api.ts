@@ -16,15 +16,11 @@ export interface GedcomName {
   normalized?: string; // a normalized representation for searching
 }
 
+export type DatePrecision = "year" | "month" | "day";
 export interface GedcomDate {
-  // Raw GEDCOM date string, e.g. "12 APR 1900", "ABT 1900", "BET 1900 AND 1910"
   text: string;
-  // Optional JS Date when the date can be unambiguously parsed
   parsed?: Date;
-  // Flags for fuzzy/approximate dates
-  circa?: boolean;
-  // Optional range when the date represents an interval
-  range?: { from?: Date; to?: Date };
+  precision?: DatePrecision;
 }
 
 export interface GedcomPointer {

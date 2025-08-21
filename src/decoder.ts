@@ -4,6 +4,7 @@ import {
   TagDecoder,
   NodeFactory,
   DecoderRegistry,
+  DatePrecision,
 } from "./api.js";
 
 // Simple registry implementation
@@ -21,60 +22,53 @@ export class SimpleDecoderRegistry implements DecoderRegistry {
 const dateDecoder: TagDecoder = (node, rawValue) => {
   if (!rawValue) return undefined;
   const text = String(rawValue).trim();
-  // basic parsing; keep simple
-  const parsed = ((): Date | undefined => {
-    const iso = Date.parse(text);
-    if (!isNaN(iso)) return new Date(iso);
-    const parts = text.split(/\s+/);
-    if (parts.length === 3) {
-      const d = parseInt(parts[0], 10);
-      const m = (
-        {
-          JAN: 0,
-          FEB: 1,
-          MAR: 2,
-          APR: 3,
-          MAY: 4,
-          JUN: 5,
-          JUL: 6,
-          AUG: 7,
-          SEP: 8,
-          OCT: 9,
-          NOV: 10,
-          DEC: 11,
-        } as any
-      )[parts[1].toUpperCase()];
-      const y = parseInt(parts[2], 10);
-      if (!isNaN(d) && m !== undefined && !isNaN(y)) return new Date(y, m, d);
+  const monthMap: Record<string, number> = {
+    JAN: 0,
+    FEB: 1,
+    MAR: 2,
+    APR: 3,
+    MAY: 4,
+    JUN: 5,
+    JUL: 6,
+    AUG: 7,
+    SEP: 8,
+    OCT: 9,
+    NOV: 10,
+    DEC: 11,
+  };
+  let parsed: Date | undefined = undefined;
+  let precision: DatePrecision | undefined = undefined;
+  let m: RegExpMatchArray | null;
+  if ((m = text.match(/^([0-9]{1,2}) ([A-Z]{3}) ([0-9]{4})$/))) {
+    const day = parseInt(m[1], 10);
+    const month = monthMap[m[2].toUpperCase()];
+    const year = parseInt(m[3], 10);
+    if (!isNaN(day) && month !== undefined && !isNaN(year)) {
+      parsed = new Date(year, month, day);
+      precision = "day";
     }
-    if (parts.length === 2) {
-      const m = (
-        {
-          JAN: 0,
-          FEB: 1,
-          MAR: 2,
-          APR: 3,
-          MAY: 4,
-          JUN: 5,
-          JUL: 6,
-          AUG: 7,
-          SEP: 8,
-          OCT: 9,
-          NOV: 10,
-          DEC: 11,
-        } as any
-      )[parts[0].toUpperCase()];
-      const y = parseInt(parts[1], 10);
-      if (m !== undefined && !isNaN(y)) return new Date(y, m, 1);
+  } else if ((m = text.match(/^([A-Z]{3}) ([0-9]{4})$/))) {
+    const month = monthMap[m[1].toUpperCase()];
+    const year = parseInt(m[2], 10);
+    if (month !== undefined && !isNaN(year)) {
+      parsed = new Date(year, month, 1);
+      precision = "month";
     }
-    return undefined;
-  })();
+  } else if ((m = text.match(/^([0-9]{4})$/))) {
+    const year = parseInt(m[1], 10);
+    if (!isNaN(year)) {
+      parsed = new Date(year, 0, 1);
+      precision = "year";
+    }
+  }
+  if (!parsed) {
+    precision = undefined;
+  }
   return {
     text,
-    parsed: parsed || undefined,
-    circa: /ABT|CIR|ABOUT/i.test(text),
-    range: undefined,
-  } as GedcomValue;
+    parsed,
+    precision,
+  };
 };
 
 const nameDecoder: TagDecoder = (node, rawValue) => {
