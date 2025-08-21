@@ -1,0 +1,9 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "js/ts.implicitProjectConfig.target": "ES2024",
+  "jest.runMode": "on-demand",
+  "eslint.run": "onType",
+  "eslint.validate": ["typescript", "javascript"],
+  "eslint.lintTask.enable": true
+}
