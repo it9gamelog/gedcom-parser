@@ -46,13 +46,18 @@ export class IndividualNode extends BaseNode {
     super(tag, rawValue, parent, meta);
   }
 
-  getNames(): Array<string | GedcomValue> {
-    const out: Array<string | GedcomValue> = [];
+  getName(): string | undefined {
     for (const c of this.children) {
-      if (c.tag === "NAME")
-        out.push(c.value !== undefined ? c.value : c.rawValue ?? "");
+      if (
+        c.tag === "NAME" &&
+        c.value &&
+        typeof c.value === "object" &&
+        "display" in c.value
+      ) {
+        return c.value.display;
+      }
     }
-    return out;
+    return undefined;
   }
 
   getBirthDate(): Date | null {

@@ -73,13 +73,12 @@ const dateDecoder: TagDecoder = (node, rawValue) => {
 
 const nameDecoder: TagDecoder = (node, rawValue) => {
   if (!rawValue) return undefined;
-  const full = String(rawValue);
-  const m = full.match(/\/(.*?)\//);
+  const display = String(rawValue).replace(/\//g, "").trim();
+  const m = String(rawValue).match(/\/(.*?)\//);
   const surname = m ? m[1] : undefined;
   return {
-    full,
+    display,
     surname,
-    normalized: full.replace(/\s+/g, " ").trim(),
   } as GedcomValue;
 };
 

@@ -27,20 +27,6 @@ export async function resolvePointers(
         const ref = result.byId[ptr];
         if (ref) (n.value as any).ref = ref;
       }
-      // also check rawValue if value not present
-      if (
-        n &&
-        (n.value === undefined || (n.value && !(n.value as any).pointer)) &&
-        n.rawValue
-      ) {
-        const pv = String(n.rawValue).trim();
-        if (/^@.+@$/.test(pv)) {
-          const ref = result.byId[pv];
-          if (ref) {
-            n.value = { pointer: pv, ref } as GedcomValue;
-          }
-        }
-      }
       if (n && n.children) for (const c of n.children) stack.push(c);
     }
   }

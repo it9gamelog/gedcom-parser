@@ -20,9 +20,8 @@ describe("Decoder cases", () => {
     const result = parseGedcomSync(gedcom);
     const indi = result.nodes[0] as IndividualNode;
     const nameNode = indi.children.find((n) => n.tag === "NAME");
-    expect(nameNode?.value?.full).toBe("John /Doe/");
+    expect(nameNode?.value?.display).toBe("John Doe");
     expect(nameNode?.value?.surname).toBe("Doe");
-    expect(nameNode?.value?.normalized).toBe("John /Doe/");
   });
 
   it("decodes pointer value", () => {

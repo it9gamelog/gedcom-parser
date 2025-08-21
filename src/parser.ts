@@ -1,5 +1,10 @@
 // Minimal GEDCOM parser implementation in TypeScript
-import { GedcomNode, GedcomValue, DecoderRegistry } from "./api.js";
+import {
+  GedcomNode,
+  GedcomValue,
+  DecoderRegistry,
+  ParseOptions,
+} from "./api.js";
 import { applyDecoders, createDefaultRegistry } from "./decoder.js";
 import { DefaultNodeFactory } from "./node.js";
 
@@ -47,9 +52,9 @@ class Parser {
   private roots: GedcomNode[] = [];
   private stack: Array<GedcomNode | undefined> = [];
   private byId: Record<string, GedcomNode> = {};
-  private options: any;
+  private options: ParseOptions;
 
-  constructor(options: any = {}) {
+  constructor(options: ParseOptions = {}) {
     this.options = options;
   }
 
@@ -117,7 +122,7 @@ class Parser {
       resolvePointers: (opts?: any) =>
         resolvePointers({ nodes: this.roots, byId: this.byId }, opts),
     };
-    if (this.options.resolvePointers) {
+    if (this.options.resolvePointers ?? true) {
       result.resolvePointers();
     }
     return result;

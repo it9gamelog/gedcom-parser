@@ -99,7 +99,7 @@ export interface DecoderRegistry {
 export interface ParseOptions {
   strict?: boolean; // strict vs permissive parsing
   normalizeWhitespace?: boolean; // whether to collapse/trim whitespace
-  resolvePointers?: boolean; // whether to automatically resolve pointers after parse
+  resolvePointers?: boolean; // whether to automatically resolve pointers after parse (default: yes)
   nodeFactory?: NodeFactory; // override node construction
   decoders?: Record<string, TagDecoder> | DecoderRegistry; // user-supplied decoders
   registry?: DecoderRegistry; // optional decoder registry
