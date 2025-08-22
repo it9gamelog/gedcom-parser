@@ -1,10 +1,5 @@
-src/
-test/
-node_modules/
-.git/
-.gitignore
-.vscode/
-*.log
-*.ts
-*.md
-*.map
+*
+.*
+*.*
+!dist/**
+dist/examples/*

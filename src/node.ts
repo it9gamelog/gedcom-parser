@@ -262,7 +262,7 @@ export class FamilyGroupNode extends BaseNode {
   }
 
   /**
-   * Returns the date value of the first MARR node, or undefined if not available.
+   * Returns the date value of the first MARR node, representing the marriage date, or undefined if not available.
    */
   getMarriageDate(): GedcomValue | undefined {
     const marr = this.getMarriageNode();
@@ -270,7 +270,7 @@ export class FamilyGroupNode extends BaseNode {
   }
 
   /**
-   * Returns the date value of the first DIV node, or undefined if not available.
+   * Returns the date value of the first DIV node, representing the divorce date, or undefined if not available.
    */
   getDivorceDate(): GedcomValue | undefined {
     const div = this.getDivorceNode();

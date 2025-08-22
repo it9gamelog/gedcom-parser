@@ -1,5 +1,5 @@
 {
-  "name": "gedcom-parser",
+  "name": "@it9gamelog/gedcom-parser",
   "version": "0.1.0",
   "type": "module",
   "packageManager": "yarn@4.6.0",
@@ -20,5 +20,16 @@
     "vitest": "^3.2.4"
   },
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts"
+  "types": "dist/src/index.d.ts",
+  "description": "A TypeScript GEDCOM parser for Node and the browser.",
+  "directories": {
+    "example": "examples",
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github-it9gamelog:it9gamelog/gedcom-parser.git"
+  },
+  "author": "",
+  "license": "MIT"
 }
