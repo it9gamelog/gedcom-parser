@@ -1,10 +1,4 @@
-import {
-  GedcomNode,
-  GedcomValue,
-  TagDecoder,
-  NodeFactory,
-  DecoderRegistry,
-} from "./api.js";
+import { GedcomNode, NodeFactory } from "./node.js";
 
 // Resolve pointers across a parse result
 export async function resolvePointers(

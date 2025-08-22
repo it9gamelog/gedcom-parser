@@ -1,10 +1,11 @@
 {
   "name": "gedcom-parser",
+  "version": "0.1.0",
   "type": "module",
   "packageManager": "yarn@4.6.0",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node ./dist/scripts/demo.js",
+    "test": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
@@ -17,5 +18,7 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
-  }
+  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts"
 }

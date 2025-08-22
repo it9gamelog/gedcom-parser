@@ -1,13 +1,78 @@
-import {
-  GedcomNode,
-  GedcomValue,
-  TagDecoder,
-  NodeFactory,
-  DecoderRegistry,
-  DatePrecision,
-} from "./api.js";
+import { GedcomNode, Tag } from "./node.js";
 
-// Simple registry implementation
+/**
+ * GedcomValue is the canonical union of values produced by decoders.
+ *
+ * Typical runtime values:
+ * - string: raw un-decoded values (default for most tags)
+ * - GedcomDate: when the tag is a DATE or decoder returns a structured date
+ * - GedcomPointer: when the tag points to another record (INDI/FAM references)
+ * - any: custom decoder return values are permitted (the registry can
+ *   provide structured objects specific to your application)
+ */
+export type GedcomValue = GedcomName | GedcomDate | GedcomPointer | any;
+
+/**
+ * Registry abstraction for decoders. Implementations should allow registering
+ * decoders by tag and retrieving them during parsing.
+ */
+export interface DecoderRegistry {
+  /** register a decoder for a specific GEDCOM tag */
+  register(tag: Tag, decoder: TagDecoder): void;
+  /** retrieve a decoder previously registered for `tag` */
+  get(tag: Tag): TagDecoder | undefined;
+}
+
+/**
+ * A TagDecoder is a function that receives a node and its raw parts and
+ * returns a decoded value. The return type is intentionally permissive to
+ * allow custom decoders to return any structured data they need.
+ */
+export type TagDecoder = (node: GedcomNode) => GedcomValue;
+
+/**
+ * GedcomName represents a parsed name structure from a GEDCOM file.
+ */
+export interface GedcomName {
+  /** name string for display (e.g. "John Doe") */
+  display: string;
+  /** optional surname (e.g. "Doe") */
+  surname?: string;
+}
+
+/**
+ * Precision level for a parsed GEDCOM date.
+ * - "year": only the year was parsed (e.g. "1925")
+ * - "month": year+month were parsed (e.g. "MAR 1925")
+ * - "day": full date with day (e.g. "12 MAR 1925")
+ */
+export type DatePrecision = "year" | "month" | "day";
+
+/**
+ * Structured representation of a decoded GEDCOM date value.
+ */
+export interface GedcomDate {
+  /** original textual date from the GEDCOM file (unchanged) */
+  text: string;
+  /** optional Date object when parsing succeeded (may be undefined) */
+  parsed?: Date;
+  /** optional precision hint describing the granularity of `parsed` */
+  precision?: DatePrecision;
+}
+
+/**
+ * Represents a pointer/reference to another GEDCOM record.
+ */
+export interface GedcomPointer {
+  /** pointer id string exactly as found in the GEDCOM source (e.g. "@I1@") */
+  pointer: string; // pointer id like "@I1@"
+  /** The resolved node after pointer resolution */
+  ref?: GedcomNode; // optional resolved reference
+}
+
+/**
+ * Simple implementation of the DecoderRegistry interface.
+ */
 export class SimpleDecoderRegistry implements DecoderRegistry {
   private map = new Map<string, TagDecoder>();
   register(tag: string, decoder: TagDecoder): void {
@@ -19,9 +84,9 @@ export class SimpleDecoderRegistry implements DecoderRegistry {
 }
 
 // Basic decoders
-const dateDecoder: TagDecoder = (node, rawValue) => {
-  if (!rawValue) return undefined;
-  const text = String(rawValue).trim();
+const dateDecoder: TagDecoder = (node) => {
+  if (!node.rawValue) return undefined;
+  const text = String(node.rawValue).trim();
   const monthMap: Record<string, number> = {
     JAN: 0,
     FEB: 1,
@@ -71,24 +136,25 @@ const dateDecoder: TagDecoder = (node, rawValue) => {
   };
 };
 
-const nameDecoder: TagDecoder = (node, rawValue) => {
-  if (!rawValue) return undefined;
-  const display = String(rawValue).replace(/\//g, "").trim();
-  const m = String(rawValue).match(/\/(.*?)\//);
+const nameDecoder: TagDecoder = (node) => {
+  if (!node.rawValue) return undefined;
+  const display = String(node.rawValue).replace(/\//g, "").trim();
+  const m = String(node.rawValue).match(/\/(.*?)\//);
   const surname = m ? m[1] : undefined;
   return {
     display,
     surname,
-  } as GedcomValue;
+  } as GedcomName;
 };
 
-// Factory to create a fresh registry pre-populated with default decoders.
-export function createDefaultRegistry(): SimpleDecoderRegistry {
+/**
+ * Creates a default decoder registry pre-populated with common GEDCOM decoders.
+ * @returns A SimpleDecoderRegistry instance with default decoders registered.
+ */
+export function createDefaultRegistry(): DecoderRegistry {
   const r = new SimpleDecoderRegistry();
   r.register("DATE", dateDecoder);
   r.register("NAME", nameDecoder);
-  r.register("GIVN", nameDecoder);
-  r.register("SURN", nameDecoder);
   return r;
 }
 
@@ -97,7 +163,7 @@ export function applyDecoders(nodes: GedcomNode[], registry: DecoderRegistry) {
   function walk(node: GedcomNode) {
     if (node.rawValue !== undefined) {
       const decoder = registry.get(node.tag);
-      if (decoder) node.value = decoder(node, node.rawValue, node.children);
+      if (decoder) node.value = decoder(node);
       else {
         const pv = String(node.rawValue);
         if (/^@.+@$/.test(pv.trim()))

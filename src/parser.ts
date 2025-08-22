@@ -1,14 +1,47 @@
 // Minimal GEDCOM parser implementation in TypeScript
+import { createDefaultNodeFactory, GedcomNode, NodeFactory } from "./node.js";
 import {
-  GedcomNode,
-  GedcomValue,
+  applyDecoders,
+  createDefaultRegistry,
   DecoderRegistry,
-  ParseOptions,
-} from "./api.js";
-import { applyDecoders, createDefaultRegistry } from "./decoder.js";
-import { DefaultNodeFactory } from "./node.js";
+} from "./decoder.js";
 
 import { resolvePointers } from "./pointer.js";
+
+/**
+ * Options you can pass to the parser to control behavior and extension
+ * points. All fields are optional; sensible defaults are used by the parser.
+ */
+export interface ParseOptions {
+  /** when true (default), the parser will resolve pointer references to
+   * actual `GedcomNode` objects after parsing. Set to false to avoid the
+   * extra resolution pass when you only need the raw nodes.
+   */
+  resolvePointers?: boolean;
+  /** optional custom node factory to construct richer node instances */
+  nodeFactory?: NodeFactory;
+  /** optional decoder registry instance for parsing values */
+  registry?: DecoderRegistry;
+}
+
+/**
+ * The result returned from the parser. Contains the top-level nodes and
+ * helpers for looking up nodes by id and resolving pointers after the fact.
+ */
+export interface ParseResult {
+  /** top-level nodes parsed from the source (records at level 0) */
+  nodes: GedcomNode[]; // top-level nodes (e.g. multiple records)
+  /** map from pointer id ("@I1@") to the corresponding node for quick lookup */
+  byId: Record<string, GedcomNode>; // optional index of nodes by pointer id
+  /** the decoder registry used during parsing (when available) */
+  registry?: DecoderRegistry;
+  /**
+   * optional helper to perform pointer resolution after parse. When present
+   * calling this will attempt to populate `GedcomPointer.ref` for pointer
+   * values and any cross-reference helpers your NodeFactory may expose.
+   */
+  resolvePointers?: (options?: { timeoutMs?: number }) => Promise<void>;
+}
 
 function parseLine(line: string) {
   line = line.replace(/\r$/, "");
@@ -61,11 +94,6 @@ class Parser {
   feed(rawLine: string) {
     const parsed = parseLine(String(rawLine));
     if (!parsed) return;
-    if ((parsed as any).invalid) {
-      if (this.options.strict)
-        throw new Error("Invalid GEDCOM line: " + rawLine);
-      return;
-    }
     const { level, pointer, tag, value } = parsed as any;
 
     // handle CONT/CONC
@@ -82,7 +110,7 @@ class Parser {
       return;
     }
 
-    const factory = this.options.nodeFactory ?? DefaultNodeFactory;
+    const factory = this.options.nodeFactory ?? createDefaultNodeFactory();
     const node = factory(tag as string, value as string | undefined, null, {});
     if (pointer) {
       node.id = pointer as string;
@@ -112,8 +140,7 @@ class Parser {
 
   finish() {
     // Apply decoders using the effective registry
-    const effectiveRegistry =
-      (this.options.registry as DecoderRegistry) ?? createDefaultRegistry();
+    const effectiveRegistry = this.options.registry ?? createDefaultRegistry();
     applyDecoders(this.roots, effectiveRegistry);
 
     const result = {
@@ -197,11 +224,14 @@ async function* linesFrom(
 }
 
 /**
- * Top-level parse function: accept a string, Web ReadableStream, or AsyncIterable and parse via stream core.
+ * Parses GEDCOM data from a string, Web ReadableStream, or AsyncIterable.
+ * @param input - GEDCOM data as string, ReadableStream, or AsyncIterable
+ * @param options - Parser options
+ * @returns Parsed GEDCOM result with nodes and pointer map
  */
 export async function parseGedcom(
   input: string | AsyncIterable<any> | ReadableStream,
-  options: any = {}
+  options: ParseOptions = {}
 ) {
   const parser = new Parser(options);
   for await (const raw of linesFrom(input)) parser.feed(String(raw));
@@ -209,9 +239,12 @@ export async function parseGedcom(
 }
 
 /**
- * Top-level parse function: accept a string and parse synchronously.
+ * Parses GEDCOM data from a string synchronously.
+ * @param input - GEDCOM data as string
+ * @param options - Parser options
+ * @returns Parsed GEDCOM result with nodes and pointer map
  */
-export function parseGedcomSync(input: string, options: any = {}) {
+export function parseGedcomSync(input: string, options: ParseOptions = {}) {
   // Strip BOM if present
   let src = String(input);
   if (src.charCodeAt(0) === 0xfeff) src = src.slice(1);
@@ -220,5 +253,3 @@ export function parseGedcomSync(input: string, options: any = {}) {
   for (let i = 0; i < lines.length; i++) parser.feed(lines[i]);
   return parser.finish();
 }
-
-export default { parseGedcom, parseGedcomSync };
