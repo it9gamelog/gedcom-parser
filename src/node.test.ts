@@ -69,3 +69,79 @@ describe("PlaceNode helpers", () => {
     expect(placeNode.getNormalized()).toBe("New York, USA");
   });
 });
+
+describe("FamilyEventNode helpers", () => {
+  it("getMarriageNode and getMarriageDate return correct node and date value", () => {
+    const gedcom = ["0 @F1@ FAM", "1 MARR", "2 DATE 12 MAR 1925"].join("\n");
+    const result = parseGedcomSync(gedcom);
+    const fam = result.nodes.find((n) => n.tag === "FAM") as FamilyGroupNode;
+    const marriageNode = fam.getMarriageNode();
+    expect(marriageNode).not.toBeNull();
+    expect(marriageNode?.tag).toBe("MARR");
+    expect(fam.getMarriageDate()?.parsed instanceof Date).toBe(true);
+    expect(fam.getMarriageDate()?.precision).toBe("day");
+    expect(fam.getMarriageDate()?.parsed?.getFullYear()).toBe(1925);
+  });
+
+  it("getDivorceNode and getDivorceDate return correct node and date value", () => {
+    const gedcom = ["0 @F1@ FAM", "1 DIV", "2 DATE 1925"].join("\n");
+    const result = parseGedcomSync(gedcom);
+    const fam = result.nodes.find((n) => n.tag === "FAM") as FamilyGroupNode;
+    const divorceNode = fam.getDivorceNode();
+    expect(divorceNode).not.toBeNull();
+    expect(divorceNode?.tag).toBe("DIV");
+    expect(fam.getDivorceDate()?.parsed instanceof Date).toBe(true);
+    expect(fam.getDivorceDate()?.precision).toBe("year");
+    expect(fam.getDivorceDate()?.parsed?.getFullYear()).toBe(1925);
+  });
+
+  it("getMarriageNode/getMarriageDate returns first MARR node/date if multiple present", () => {
+    const gedcom = [
+      "0 @F1@ FAM",
+      "1 MARR",
+      "2 DATE 12 MAR 1925",
+      "1 MARR",
+      "2 DATE 1926",
+    ].join("\n");
+    const result = parseGedcomSync(gedcom);
+    const fam = result.nodes.find((n) => n.tag === "FAM") as FamilyGroupNode;
+    const marriageNode = fam.getMarriageNode();
+    expect(marriageNode?.tag).toBe("MARR");
+    expect(fam.getMarriageDate()?.parsed?.getFullYear()).toBe(1925);
+  });
+
+  it("getDivorceNode/getDivorceDate returns first DIV node/date if multiple present", () => {
+    const gedcom = [
+      "0 @F1@ FAM",
+      "1 DIV",
+      "2 DATE 1925",
+      "1 DIV",
+      "2 DATE 1926",
+    ].join("\n");
+    const result = parseGedcomSync(gedcom);
+    const fam = result.nodes.find((n) => n.tag === "FAM") as FamilyGroupNode;
+    const divorceNode = fam.getDivorceNode();
+    expect(divorceNode?.tag).toBe("DIV");
+    expect(fam.getDivorceDate()?.parsed?.getFullYear()).toBe(1925);
+  });
+
+  it("getMarriageNode/getMarriageDate and getDivorceNode/getDivorceDate returns null/undefined if no DIV present", () => {
+    const gedcom = ["0 @F1@ FAM"].join("\n");
+    const result = parseGedcomSync(gedcom);
+    const fam = result.nodes.find((n) => n.tag === "FAM") as FamilyGroupNode;
+    expect(fam.getMarriageNode()).toBeNull();
+    expect(fam.getMarriageDate()).toBeUndefined();
+    expect(fam.getDivorceNode()).toBeNull();
+    expect(fam.getDivorceDate()).toBeUndefined();
+  });
+
+  it("FamilyEventNode getType returns TYPE value if present", () => {
+    const gedcom = ["0 @F1@ FAM", "1 MARR", "2 TYPE Civil", "2 DATE 1925"].join(
+      "\n"
+    );
+    const result = parseGedcomSync(gedcom);
+    const fam = result.nodes.find((n) => n.tag === "FAM") as FamilyGroupNode;
+    const marriageNode = fam.getMarriageNode();
+    expect(marriageNode?.getType()).toBe("Civil");
+  });
+});

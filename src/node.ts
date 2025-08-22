@@ -96,6 +96,40 @@ export class IndividualNode extends BaseNode {
   }
 }
 
+// Abstract class for family events
+export abstract class FamilyEventNode extends BaseNode {
+  getType(): GedcomValue | undefined {
+    const typeNode = this.children.find((c) => c.tag === "TYPE");
+    return typeNode?.value;
+  }
+  getDate(): GedcomValue | undefined {
+    const dateNode = this.children.find((c) => c.tag === "DATE");
+    return dateNode?.value;
+  }
+}
+
+export class MarriageNode extends FamilyEventNode {
+  constructor(
+    tag = "MARR",
+    rawValue?: string,
+    parent?: GedcomNode | null,
+    meta?: Record<string, any>
+  ) {
+    super(tag, rawValue, parent, meta);
+  }
+}
+
+export class DivorceNode extends FamilyEventNode {
+  constructor(
+    tag = "DIV",
+    rawValue?: string,
+    parent?: GedcomNode | null,
+    meta?: Record<string, any>
+  ) {
+    super(tag, rawValue, parent, meta);
+  }
+}
+
 // Family group with helpers for spouse/children pointers
 export class FamilyGroupNode extends BaseNode {
   constructor(
@@ -117,6 +151,26 @@ export class FamilyGroupNode extends BaseNode {
 
   getChildren(): GedcomNode[] {
     return this.childrenReferences("CHIL");
+  }
+
+  getMarriageNode(): MarriageNode | null {
+    const node = this.children.find((c) => c.tag === "MARR");
+    return node ? (node as MarriageNode) : null;
+  }
+
+  getDivorceNode(): DivorceNode | null {
+    const node = this.children.find((c) => c.tag === "DIV");
+    return node ? (node as DivorceNode) : null;
+  }
+
+  getMarriageDate(): GedcomValue | undefined {
+    const marr = this.getMarriageNode();
+    return marr?.getDate();
+  }
+
+  getDivorceDate(): GedcomValue | undefined {
+    const div = this.getDivorceNode();
+    return div?.getDate();
   }
 }
 
@@ -147,6 +201,8 @@ export const DefaultNodeFactory = (
   const t = (tag || "").toUpperCase();
   if (t === "INDI") return new IndividualNode(tag, rawValue, parent, meta);
   if (t === "FAM") return new FamilyGroupNode(tag, rawValue, parent, meta);
+  if (t === "MARR") return new MarriageNode(tag, rawValue, parent, meta);
+  if (t === "DIV") return new DivorceNode(tag, rawValue, parent, meta);
   if (t === "PLAC") return new PlaceNode(tag, rawValue, parent, meta);
   return new BaseNode(tag, rawValue, parent, meta);
 };
